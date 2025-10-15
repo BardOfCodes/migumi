@@ -5,6 +5,9 @@ body {
   color: #3d3838 !important;
   font-weight: 400;
 }
+.column{
+  padding: 0.5rem !important;
+}
 
 .model-viewer {
   width: 800px;
@@ -135,7 +138,7 @@ a:active { color: #958aa3 !important }
 }
 
 .publication-authors {
-  /*color: #4286f4;*/
+  color: #4286f4;
 }
 
 .publication-video {

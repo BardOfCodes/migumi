@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="description"
+        content="MiGumi: Making Tightly Coupled Integral Joints Millable">
+  <meta name="keywords" content="MiGumi CNC Milling Integral Joints Fabrication Wood Joints">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MiGumi: Making Tightly Coupled Integral Joints Millable</title>
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
+        rel="stylesheet">
+
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+  <link rel="icon" type="image/png" href="./static/images/icon.svg">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <script src="./static/js/bulma-carousel.min.js"></script>
+  <script src="./static/js/bulma-slider.min.js"></script>
+  <script src="./static/js/index.js"></script>
+  
+  <script src="./static/js/video_comparison.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
+  
+</head>
+<body>
+
+
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-widescreen">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <h1 class="title is-2 publication-title">MiGumi: Making Tightly Coupled Integral Joints Millable</h1>
+          <div class="is-size-4 publication-authors mt-3 darkest-font">
+            <div class="columns">
+            <div class="column ml-2 mr-2">
+            <span class="author-block">
+              <a href="https://bardofcodes.github.io/">Aditya Ganeshan</a><sup><span class="author-star" style="font-size: 1.0em;"> &clubs;</span></sup></span>
+            </div>
+            <div class="column ml-2 mr-2">
+            <span class="author-block">
+              <a href="https://graphics.pixar.com/people/kurt/index.html">Kurt Fleischer</a><sup><span class="author-star" style="font-size: 1.0em;"> &diamondsuit;</span></sup></span>
+            </div>
+            <div class="column ml-2 mr-2">
+            <span class="author-block">
+              <a href="https://rgl.epfl.ch/people/wjakob">Wenzel Jakob</a><sup><span class="author-star" style="font-size: 1.0em;"> &spadesuit;</span></sup></span>
+            </div>
+            <div class="column ml-2 mr-2">
+            <span class="author-block">
+              <a href="https://faculty.runi.ac.il/arik/site/index.asp">Ariel Shamir</a><sup><span class="author-star" style="font-size: 1.0em;"> &heartsuit;</span></sup></span>
+            </div>
+            </div>
+            <div class="columns">
+            <div class="column ml-2 mr-2">
+            <span class="author-block">
+              <a href="https://dritchie.github.io/">Daniel Ritchie</a><sup><span class="author-star" style="font-size: 1.0em;"> &clubs;</span></sup></span>
+            </div>
+            <div class="column ml-2 mr-2">
+            <span class="author-block">
+              <a href="https://www-ui.is.s.u-tokyo.ac.jp/~takeo/">Takeo Igarashi</a><sup><span class="author-star" style="font-size: 1.0em;"> &#9733;</span></sup></span>
+            </div>
+            <div class="column ml-2 mr-2">
+            <span class="author-block">
+              <a href="https://www.ma-la.com">Maria Larsson</a><sup><span class="author-star" style="font-size: 1.0em;"> &#9733;</span></sup>
+            </span>
+          </div>
+          </div>
+          </div>
+          <div class="is-size-4 publication-authors mt-3">
+            <div class="columns">
+              <div class="column ml-2 mr-2">
+                <span class="author-star" style="font-size: 1.0em;"> &clubs;</span> <span class="author-block">Brown University</span>
+              </div>
+              <div class="column ml-2 mr-2">
+                <span class="author-star" style="font-size: 1.0em;"> &diamondsuit;</span> <span class="author-block">Pixar Animation Studios</span>
+              </div>
+              <div class="column ml-2 mr-2">
+                <span class="author-star" style="font-size: 1.0em;"> &spadesuit;</span> <span class="author-block">EPFL</span>
+              </div>
+            </div>
+            <div class="columns">
+              <div class="column ml-2 mr-2">
+                <span class="author-star" style="font-size: 1.0em;"> &heartsuit;</span> <span class="author-block">Reichman University</span>
+              </div>
+              <div class="column ml-2 mr-2">
+                <span class="author-star" style="font-size: 1.0em;"> &#9733;</span> <span class="author-block">University of Tokyo</span>
+              </div>
+            </div>
+            <div class="is-size-4 publication-authors mt-3">
+              <p>  SIGGRAPH Asia, 2025 </p>
+            </div>
+          </div>
+
+          <div class="columns has-text-centered is-centered is-mobile mt-3 mb-0 is-multiline">
+            <div class="column ml-2 mr-2 item">
+                <a href="https://bardofcodes.github.io/papers/migumi/paper.pdf">
+                    <img src="./static/images/paper_frontpage.jpg" style="max-height: 80px;">
+                </a>
+                <a href="https://bardofcodes.github.io/papers/migumi/paper.pdf">
+                    <h4> Paper (17 MB)</h4>
+                </a>
+            </div>
+            <div class="column ml-2 mr-2 item">
+                <a href="https://bardofcodes.github.io/papers/migumi/paper_lowres.pdf">
+                    <img src="./static/images/paper_frontpage.jpg" style="max-height: 80px;">
+                </a>
+                <a href="https://bardofcodes.github.io/papers/migumi/paper_lowres.pdf">
+                    <h4> Low Res (2 MB)</h4>
+                </a>
+            </div>
+            <div class="column ml-2 mr-2 item">
+                <a href="https://bardofcodes.github.io/papers/migumi/supp.pdf">
+                    <img src="./static/images/supp_frontpage.jpg" style="max-height: 80px">
+                </a>
+                <a href="https://bardofcodes.github.io/papers/migumi/supp.pdf">
+                    <h4> Supp. (5.7 MB)</h4>
+                </a>
+            </div>
+            <div class="column ml-2 mr-2 item">
+                <a href="https://arxiv.org/abs/">
+                    <img src="./static/images/arxiv-logo.svg" style="max-height: 80px">
+                </a>
+                <a href="https://arxiv.org/abs/">
+                    <h4> ArXiv </h4>
+                </a>
+            </div>
+            <div class="column ml-2 mr-2 item">
+                <a href="https://github.com/bardofcodes/migumi/">
+                    <img src="./static/images/github-logo.svg"  style="max-height: 80px">
+                </a>
+                <a href="https://github.com/bardofcodes/migumi/">
+                    <h4> Code </h4>
+                </a>
+            </div>
+            <div class="column ml-2 mr-2 item">
+                <a href="https://huggingface.co/bardofcodes/migumi">
+                    <img src="./static/images/hf.svg" style="max-height: 80px">
+                </a>
+                <a href="https://huggingface.co/bardofcodes/migumi">
+                    <h4> Dataset </h4>
+                </a>
+            </div>
+            <div class="column ml-2 mr-2 item">
+                <a href="#bibtex">
+                    <span class="icon" style="font-size: 80px;">
+                        <i class="fas fa-quote-right"></i>
+                    </span>
+                </a>
+                <a href="#bibtex">
+                    <h4> BibTeX </h4>
+                </a>
+            </div>
+          </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section mt-1 pt-1">
+
+
+  <div class="container is-max-widescreen">
+  <div class="columns is-centered">
+    <div class="column">
+      <div class="box m-1 p-1 is-vcentered">
+      <figure class="image">
+      <div class="item item-banner">
+        <video poster="" id="banner" autoplay muted loop playsinline height="100%">
+            <source src="./static/videos/banner_joints.mp4"
+                    type="video/mp4">
+            </video>
+          </div>
+        </figure> 
+      </div>
+    </div>
+    </div>
+  </div>
+
+    <div class="container is-max-widescreen">
+        <!-- Abstract. -->
+        <div class="columns is-centered has-text-centered">
+          <div class="column ">
+
+        <h2 class="subtitle has-text-justified is-size-5">
+            Integral joints are assembled without glue, nails, or screws, and have long been valued for their strength, reusability, and elegance. Yet despite their utility, they remain rare in modern manufacturing workflows due to the precision required for hand fabrication. Three-axis CNC milling offers a compelling alternative, but traditional joint designs contain sharp internal corners—features incompatible with cylindrical mill bits. We present MiGumi: a method that adapts traditional integral joint designs for CNC fabrication while preserving tight coupling between parts.
+        </h2>
+      <!-- </div> -->
+      </div>
+      </div>
+      </div>
+</section>
+
+<section class="section">
+    <div class="container is-max-widescreen">
+      <!-- Abstract. -->
+      <div class="columns is-centered has-text-centered">
+        <div class="column ">
+          <h2 class="title is-3">Abstract</h2>
+          <div class="content has-text-justified is-size-5">
+            <p>
+              Traditional integral wood joints, despite their strength, durability, and elegance, remain rare in modern workflows due to the cost and difficulty of manual fabrication. CNC milling offers a scalable alternative, but directly milling traditional joints often fails to produce functional results because milling induces geometric deviations—such as rounded inner corners—that alter the target geometries of the parts. Since joints rely on tightly fitting surfaces, such deviations introduce gaps or overlaps that undermine fit or block assembly.
+            </p>
+            <p>
+              We propose to overcome this problem by (1) designing a language that represent millable geometry, and (2) co-optimizing part geometries to restore coupling. We introduce <span class="dnerf"><b>Millable eXtrusion Geometry</b></span> (<span class="dnerf"><b>MXG</b></span>), a language for representing geometry as the outcome of milling operations performed with flat-end drill bits. <span class="dnerf"><b>MXG</b></span> represents each operation as a subtractive extrusion volume defined by a tool direction and drill radius. This parameterization enables the modeling of artifact-free geometry under an idealized zero-radius drill bit, matching traditional joint designs. Increasing the radius then reveals milling-induced deviations, which compromise the integrity of the joint.
+            </p>
+            <p>
+              To restore coupling, we formalize tight coupling in terms of both surface proximity and proximity constraints on the mill-bit paths associated with mating surfaces. We then derive two tractable, differentiable losses that enable efficient optimization of joint geometry. We evaluate our method on traditional joint designs, demonstrating that it produces CNC-compatible, tightly fitting joints that approximates the original geometry. By reinterpreting traditional joints for CNC workflows, we continue the evolution of this heritage craft and help ensure its relevance in future making practices.
+            </p>
+          </div>
+        </div>
+      </div>
+      <!--/ Abstract. -->
+  
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-max-widescreen">
+
+        <div class="columns is-centered has-text-centered">
+          <div class="column ">
+            <h2 class="title is-3">Physical Fabrication</h2>
+          <div class="box m-1 p-1 is-vcentered">
+          <figure class="image">
+          <div class="item item-fabrication">
+            <video poster="" id="fabrication" controls muted playsinline height="100%">
+                <source src="./static/videos/fabrication.mp4"
+                        type="video/mp4">
+                </video>
+              </div>
+            </figure> 
+            </div>
+            <h2 class="subtitle has-text-justified is-size-5 mt-2">
+              Our method enables fabrication of traditional integral joints using standard 3-axis CNC machines. The joints assemble without glue, nails, or fasteners, achieving precise alignment and firm contact between mating surfaces.
+            </h2>
+          </div>
+        </div>
+      </div>
+      </div>
+</section>
+
+
+<section class="section">
+  <div class="container is-max-widescreen">
+    <div class="columns is-vcentered">
+      <div class="column is-half">
+        <h2 class="title is-2">What is the Problem?</h2>
+        <div class="content has-text-justified is-size-4 mt-2">
+          <p>
+            Traditional joints have sharp internal corners that cylindrical mill bits cannot produce. Naively milling these designs introduces rounding errors that break tight coupling, creating gaps or overlaps that prevent assembly.
+          </p>
+        </div>
+      </div>
+      
+      <div class="column is-half">
+        <div class="box m-1 p-1 is-vcentered">
+        <figure class="image">
+        <img src="./static/images/introduction_dovetail.jpg" style="border: 1px solid #e0e0e0;">
+        </figure> 
+        </div>
+        <h2 class="subtitle has-text-justified is-size-5 mt-2">
+          (a) Original joint with sharp corners cannot be milled. (b) Naive adaptation creates overlaps. (c) Our method jointly optimizes for millability and tight coupling. <i>See supplementary for why other solutions fail.</i>
+        </h2>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section class="section">
+  <div class="container is-max-widescreen">
+    <div class="columns is-centered has-text-centered">
+      <div class="column ">
+        <h2 class="title is-2">Modeling Millable Geometry</h2>
+        <div class="content has-text-justified is-size-4">
+          <p>
+            We introduce <span class="dnerf"><b>Millable eXtrusion Geometry (MXG)</b></span>, a representation that models geometry as the outcome of milling operations performed with flat-end, uniform-radius tools. <span class="dnerf"><b>MXG</b></span> is millable by design and parameterized by the tool radius, making it natural for analysis and mitigation of tool-induced artifacts.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Morphological Opening -->
+    <div class="columns is-vcentered">
+      <div class="column is-half">
+        <div class="box m-1 p-1 is-vcentered">
+        <figure class="image">
+        <img src="./static/images/morphological_opening.jpg" style="border: 1px solid #e0e0e0;">
+        </figure> 
+        </div>
+      </div>
+      
+      <div class="column is-half">
+        <h2 class="title is-4">Ensuring Millability</h2>
+        <div class="content has-text-justified is-size-5 mt-2">
+          <p>
+            Morphological opening is the canonical way to derive geometry that can be safely removed by a milling tool. Given an implicitly defined input shape f (left) and a structuring element B_r representing the tool shape, the operation first applies a Minkowski subtraction (erosion, middle column) and then restores the removed volume by a subsequent addition (dilation, right column). The resulting shape excludes regions that the tool cannot reach and serves as a conservative, millable approximation of the original geometry.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Extrusion Simple -->
+    <div class="columns is-vcentered">
+      <div class="column is-half">
+        <h2 class="title is-4">Constructing Millable Extrusions</h2>
+        <div class="content has-text-justified is-size-5 mt-2">
+          <p>
+            Building on morphological opening, we construct millable extrusions through a three-step process. First, we (a) define a 2D signed distance function (SDF) using a symbolic constructive solid geometry (CSG) tree, which provides rich parametric control over the profile shape. Next, we (b) apply morphological opening to this profile to obtain a millable base region that respects the tool radius constraints. Finally, we (c) extrude this region along the milling direction to produce the solid subtractive volume. This construction pipeline ensures that every extrusion is millable by design.
+          </p>
+        </div>
+      </div>
+      
+      <div class="column is-half">
+        <div class="box m-1 p-1 is-vcentered">
+        <figure class="image">
+        <img src="./static/images/extrusion_simple.jpg" style="border: 1px solid #e0e0e0;">
+        </figure> 
+        </div>
+      </div>
+    </div>
+
+    <!-- MXG Program -->
+    <div class="columns is-vcentered">
+      <div class="column is-half">
+        <div class="box m-1 p-1 is-vcentered">
+        <figure class="image">
+        <img src="./static/images/SXG_program.jpg" style="border: 1px solid #e0e0e0;">
+        </figure> 
+        </div>
+      </div>
+      
+      <div class="column is-half">
+        <h2 class="title is-4">Modeling Traditional Joints</h2>
+        <div class="content has-text-justified is-size-5 mt-2">
+          <p>
+            With millable extrusions as primitives, we can now model complete traditional integral joints in <span class="dnerf">MXG</span>. Each part is represented as a material stock minus a sequence of subtractive extrusions. The figure shows several examples of traditional joints, each visualized with its resulting solid geometry alongside the milling directions (arrows) and 2D contours of the subtractive extrusions. These examples are designed with an idealized tool radius of r=0, capturing the original sharp-cornered geometry of traditional designs before accounting for real-world milling constraints.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- MXG Delta -->
+    <div class="columns is-vcentered">
+      <div class="column is-half">
+        <h2 class="title is-4">Modeling Milling-Induced Artifacts</h2>
+        <div class="content has-text-justified is-size-5 mt-2">
+          <p>
+            A key feature of <span class="dnerf">MXG</span> is its ability to explicitly model and control milling-induced artifacts through two critical parameters: the drill radius r and the subtraction direction. The left column shows a target part geometry designed with an idealized tool radius (r=0). As we vary these parameters, the artifacts manifest in predictable ways: (a) increasing the drill radius r progressively amplifies corner rounding, and (b) varying the milling direction shifts both the location and orientation of these artifacts. This explicit parameterization allows us to analyze how real-world milling constraints will affect the joint geometry.
+          </p>
+        </div>
+      </div>
+      
+      <div class="column is-half">
+        <div class="box m-1 p-1 is-vcentered">
+        <figure class="image">
+        <img src="./static/images/milling_artifact_control.jpg" style="border: 1px solid #e0e0e0;">
+        </figure> 
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section class="section">
+  <div class="container is-max-widescreen">
+    <div class="columns is-centered has-text-centered">
+      <div class="column ">
+        <h2 class="title is-2">Restoring Tight Coupling</h2>
+          <div class="content has-text-justified is-size-4 mt-2">
+            <p>
+              Once we can model milling artifacts, the challenge becomes restoring tight coupling. Increasing the drill radius in an <span class="dnerf">MXG</span> program from r=0 to a realistic value introduces rounding that creates gaps or overlaps. We address this by co-optimizing all parts simultaneously to restore precise contact while remaining millable.
+            </p>
+          </div>
+      </div>
+    </div>
+
+    <!-- Planar Slices -->
+    <div class="columns is-centered">
+      <div class="column">
+        <h2 class="title is-4 has-text-left">Efficient Optimization via Planar Slices</h2>
+        <div class="box m-1 p-1 is-vcentered">
+        <figure class="image">
+        <img src="./static/images/full_pipe.jpg" style="border: 1px solid #e0e0e0;">
+        </figure> 
+        </div>
+          <div class="content has-text-justified is-size-5 mt-2">
+            <br>
+            <p>
+              (a) Our optimization pipeline exploits a structural property of MXG representation to greatly reduce the problem complexity. Based on its definition as
+a composition of subtractive planar extrusions, we observe that tight coupling can be fully characterized in 1D slices that lie perpendicular to the extrusion
+directions. (b) Many of the slices exhibit identical behavior and can be further grouped into a few representative planar sets. (c) The optimization domain then
+reduces to 1D planar curves within these representative slice sets. The interface of Z1’s slice with extrusions from other directions is shown as a dashed red
+line. Such boundaries are kept fixed. (d) We optimize this reduced space to compute tightly coupled geometry, and (e) reassemble the results into the final 3D
+MiGumi parts.
+            </p>
+            <br>
+          </div>
+      </div>
+    </div>
+
+    <!-- Losses -->
+    <div class="columns is-centered">
+      <div class="column">
+        <h2 class="title is-4 has-text-left">Optimization Measures</h2>
+        <div class="box m-1 p-1 is-vcentered">
+        <figure class="image">
+        <img src="./static/images/losses.jpg" style="border: 1px solid #e0e0e0;">
+        </figure> 
+        </div>
+          <div class="content has-text-justified is-size-5 mt-2">
+            <br>
+            <p>
+              We use two complementary measures for tight coupling. <b>Surface Gap</b> (middle) integrates closest-point distances along planar curves to ensure mating surfaces remain in contact. However, optimizing surfaces alone is unstable since different mill paths can produce similar surfaces. <b>Milling Path Distance</b> (right) addresses this by constraining tool path spacing itself, penalizing deviations from the ideal distance of 2·r. Together, these enable stable gradient-based optimization maintaining both surface contact and fabrication validity.
+            </p>
+          </div>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="section">
+  <div class="container is-max-widescreen has-text-centered">
+    <h2 class="title is-2">Results</h2>
+    <!-- Qualitative Comparison -->
+    <div class="columns is-centered has-text-centered">
+      <div class="column ">
+      <h2 class="title is-4 has-text-left">Comparison to Baselines</h2>
+        <div class="box m-1 p-1 is-vcentered">
+          <figure class="image">
+    <img src="./static/images/baseline_errors.jpg" style="border: 1px solid #e0e0e0;">
+      </figure> 
+      </div>
+      
+      <h2 class="subtitle has-text-centered is-size-5 mt-3">
+        <br>
+        <i>Opening-only</i> (MO) yields overlaps. <i>Opening & Diff-Flip</i> (ODF) improves contact but violates millability. Ours achieves both.
+        <br>
+      </h2>
+    </div>
+    </div>
+
+    <!-- Physical Fabrication -->
+    <div class="columns is-centered has-text-centered">
+      <div class="column ">
+      <h2 class="title is-4 has-text-left">CNC-Milled Physical Outputs</h2>
+        <div class="box m-1 p-1 is-vcentered">
+          <figure class="image">
+    <img src="./static/images/fabricated_results.jpg" style="border: 1px solid #e0e0e0;">
+      </figure> 
+      </div>
+      
+      <h2 class="subtitle has-text-centered is-size-5 mt-3">
+        <br>
+        Joints fabricated with 3-axis CNC and quarter-inch flat-end bit. 
+        <br>
+      </h2>
+    </div>
+    </div>
+
+    <!-- Design Exploration -->
+    <div class="columns is-vcentered">
+      <div class="column is-half">
+        <div class="box m-1 p-1 is-vcentered">
+          <figure class="image">
+    <img src="./static/images/design_space.jpg" style="border: 1px solid #e0e0e0;">
+      </figure> 
+      </div>
+      </div>
+      
+      <div class="column is-half">
+      <h2 class="title is-4">Enabling Design Exploration</h2>
+      <div class="content has-text-justified is-size-5">
+        <p>
+          <span class="dnerf">MXG</span> enables structured exploration of design alternatives. By explicitly modeling the parameters that induce milling artifacts—tool direction and drill radius—authors can evaluate how different configurations trade off aesthetic, structural, and fabrication considerations.
+        </p>
+      </div>
+      
+      <h2 class="content has-text-justified is-size-5"">
+        Two variants differing in milling direction. (a) Axis-parallel milling hides artifacts internally. (b) Lateral milling improves tool accessibility but exposes artifacts.
+      </h2>
+    </div>
+    </div>
+
+    <!-- Expanding Design Space -->
+    <div class="columns is-vcentered">
+      <div class="column is-half">
+      <h2 class="title is-4">Expanding the Design Space</h2>
+      <div class="content has-text-justified is-size-5">
+        <p>
+          For certain joints, multi-directional milling is critical to ensure that tight coupling is feasible. First, the use of general CSG-like 2D expressions enable us to cover a wider spread of designs. Second, for certain joints, multi-directional milling is critical to ensure that tight coupling is feasible.
+        </p>
+      </div>
+      
+      <h2 class="subtitle has-text-justified is-size-5 mt-3">
+        On the right, we show the Tasuki Gake Watari Ago joint. Single subtractions cannot achieve tight coupling. Two oblique subtractions enable millable, tightly coupled design.
+      </h2>
+    </div>
+      
+      <div class="column is-half">
+        <div class="box m-1 p-1 is-vcentered">
+          <figure class="image">
+    <img src="./static/images/new_designs.jpg" style="border: 1px solid #e0e0e0;">
+      </figure> 
+      </div>
+      </div>
+    </div>
+
+    <!-- Failure Cases -->
+    <div class="columns is-centered has-text-centered">
+      <div class="column ">
+      <h2 class="title is-4 has-text-left">Limitations and Failure Cases</h2>
+        <div class="box m-1 p-1 is-vcentered">
+          <figure class="image">
+    <img src="./static/images/failures.jpg" style="border: 1px solid #e0e0e0;">
+      </figure> 
+      </div>
+      
+      <h2 class="subtitle has-text-centered is-size-5 mt-3">
+        <br>
+        (a) Tight coupling is infeasible when three mill paths meet at a sharp corner,resulting in unavoidable gaps. (b) A joint that becomes unassemblable after optimization as our optimization does not consider assemblability as an additional requirement}. (c) The Osaka-Jo Otemon Joint, which requires subtractions incompatible with flat-end milling, and thus cannot be represented in \SXG.
+        <br>
+      </h2>
+    </div>
+    </div>
+
+  </div>
+</section>
+
+
+<section class="section">
+  <div class="container is-max-widescreen">
+    <div class="columns is-centered has-text-centered">
+      <div class="column">
+        <h2 class="title is-2">Dataset</h2>
+        <div class="content has-text-justified is-size-5">
+          <p>
+            Our dataset consists of 30 traditional integral joint designs, each modeled parametrically using our MXG representation. These parametric programs allow for continuous variation in dimensions, proportions, and milling configurations—enabling the synthesis of a much larger family of design variants from each base joint. We plan to expand the dataset to include additional designs from historical catalogs and contemporary applications.
+          </p>
+        </div>
+        
+        <div class="box m-1 p-1 is-vcentered mt-4">
+          <figure class="image">
+            <img src="./static/images/full_dataset.jpg" style="border: 1px solid #e0e0e0;">
+          </figure>
+        </div>
+        
+        <h2 class="subtitle has-text-centered is-size-5 mt-3">
+          Our complete dataset of 30 traditional joint designs modeled in MXG. Each design can be optimized to produce millable, tightly coupled variants for CNC fabrication.
+        </h2>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section class="section">
+  <div class="container is-max-widescreen">
+
+    <div class="columns is-centered">
+      <div class="column ">
+    <h2 class="title is-3" id="bibtex">BibTeX</h2>
+    <div class="bibtex">
+    <pre><code>@article{ganeshan2025migumi,
+  author = {Ganeshan, Aditya and Fleischer, Kurt and Jakob, Wenzel and Shamir, Ariel and Ritchie, Daniel and Igarashi, Takeo and Larsson, Maria},
+  title = {MiGumi: Making Tightly Coupled Integral Joints Millable},
+  year = {2025},
+  issue_date = {December 2025},
+  publisher = {Association for Computing Machinery},
+  address = {New York, NY, USA},
+  volume = {44},
+  number = {6},
+  issn = {0730-0301},
+  url = {https://doi.org/10.1145/3763304},
+  doi = {10.1145/3763304},
+  journal = {ACM Trans. Graph.},
+  month = {dec},
+  articleno = {193},
+  numpages = {17}
+}</code></pre>
+    </div>
+  </div>
+</div>
+
+<div class="columns is-centered">
+  <div class="column ">
+      <h2 class="title is-3">Acknowledgements</h2>
+      <div class="content has-text-justified is-size-5">
+        <p>
+            We would like to thank the anonymous reviewers for their helpful suggestions. Aditya Ganeshan conducted part of this work as a visiting researcher at the Igarashi Laboratory, University of Tokyo. Daniel Ritchie is an advisor to Geopipe and owns equity in the company. Geopipe is a start-up that is developing 3D technology to build immersive virtual copies of the real world with applications in various fields, including games and architecture.
+        </p>
+      </div>
+    </div>
+  </div>
+  </div>
+</section>
+
+  
+
+<footer class="footer">
+    <div class="content has-text-centered">
+        The website design has been adapted from the <a href="https://github.com/nerfies/nerfies.github.io">Nerfies</a> template.
+    </div>
+</footer>
+
+</body>
+</html>
+

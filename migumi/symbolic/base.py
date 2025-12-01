@@ -3,6 +3,10 @@
 import geolipi.symbolic as gls
 from geolipi.symbolic.registry import register_symbol
 
+class MillableExtrusion(gls.Primitive3D):
+    @classmethod
+    def default_spec(cls):
+        return {"expr": {"type": "Expr"}, "plane": {"type": "Expr"}, "height": {"type": "float"}}
 
 class MXGFunction(gls.GLFunction):
     symbol_category = "mxg"
@@ -26,27 +30,3 @@ class NamedGeometry(MXGFunction):
     @classmethod
     def default_spec(cls):
         return {"name": {"type": "str"}}
-
-@register_symbol
-class LinkedHeightField3D(MXGFunction):
-    @classmethod
-    def default_spec(cls):
-        return {"plane": {"type": "Expr"}, "apply_height": {"type": "Expr"}}
-
-@register_symbol
-class ApplyHeight(MXGFunction):
-    @classmethod
-    def default_spec(cls):
-        return {"expr": {"type": "Expr"}, "height": {"type": "float"}}
-
-@register_symbol
-class MarkerNode(MXGFunction):
-    @classmethod
-    def default_spec(cls):
-        return {"expr": {"type": "Expr"}}
-
-@register_symbol
-class SetMaterial(MXGFunction):
-    @classmethod
-    def default_spec(cls):
-        return {"expr": {"type": "Expr"}, "material": {"type": "float"}}

@@ -1,486 +1,178 @@
 ## What must the shader contain? 
 ## All the other code components
 ## Main Fragment
-import string
-import sympy as sp
-import torch as th
-from geolipi.symbolic.base import GLFunction
 import geolipi.symbolic as gls
-from ordered_set import OrderedSet as OSet
-
-from geolipi.symbolic.symbol_types import (
-    MACRO_TYPE,
-    MOD_TYPE,
-    PRIM_TYPE,
-    COMBINATOR_TYPE,
-    TRANSFORM_TYPE,
-    POSITIONALMOD_TYPE,
-    SDFMOD_TYPE,
-)
-from geolipi.torch_compute.maps import MODIFIER_MAP, PRIMITIVE_MAP, COMBINATOR_MAP
-
+from sysl.shader.evaluate import rec_shader_eval
+from sysl.shader.param_evaluate import _inline_parse_param_from_expr
+from sysl.shader.global_shader_context import GlobalShaderContext
 import migumi.symbolic as ms
-from .utils import MODIFIER_MAP, PRIMITIVE_MAP, COMBINATOR_MAP, TRANSITION_MAP
-from . import function_wrappers as fw # function_map, main_wrapper_template
+import sysl.symbolic as sls
 
-MOTION_FUNCTIONS = OSet(["Slerp", "QuatRotationMatrix", "RotationFromMatrix", "InterpAffine", "ApplyAffine"])
-BOX_THRESH = 0.1
+from .transition_evaluate import generate_transition_code
+from .state_based_converter import state_converter
 
-class ShaderCodeStore:
+from sysl.shader.global_shader_context import GlobalShaderContext
+from sysl.shader.evaluate import rec_shader_eval, main_image_map, SCENE_EXPR_PROPS
 
-    def __init__(self):
-        self.codebook = []
-        self.tracked_functions = OSet(['iBox', "Box3D", "MinRes", "BoundingBox3D"])
-        self.custom_functions = []
-        self.tracked_variables = []
-        self.pos_stack = ["pos_0"]
-        self.sdf_stack = []
-        self.final_output = None
-        
-        self.sdf_count = 0
-        self.pos_count = 0
-        self.uniforms = {}
-        self.n_masked_geoms = 0
+
+
+
+def compile_set(expression_dict, state_map, settings=None, 
+return_shader_context=False):
+    # compile the expression to shader code
+    if settings is None:
+        settings = {}
+
+    per_inst_motion_map = state_converter(state_map)
+    global_sc = GlobalShaderContext()
+    main_lines = []
+    master_sdf_counter = 0
+    for ind, (geometry_name, expression) in enumerate(expression_dict.items()):
+        if geometry_name in per_inst_motion_map:
+            cur_expr_name = f"{geometry_name}SDF"
+            global_sc.push_codebook(cur_expr_name, SCENE_EXPR_PROPS)
+            global_sc = rec_shader_eval(expression, global_sc=global_sc)
+            last_output = global_sc.local_sc.res_sdf_stack[-1]
+            last_output_type, last_output_name = last_output
+            global_sc.resolve_codebook()
+            global_sc.pop_codebook()
+            global_sc.local_sc.add_dependency(cur_expr_name)
+            # And this is all just to get the SCENE_EXPRESSION.
+            output_name = f"res_{master_sdf_counter}"
+            main_line = f"{last_output_type} {output_name} = {geometry_name}Stateful(pos_0, globalStateStep);"
+            global_sc.local_sc.res_sdf_stack.append((last_output_type, output_name))
+            global_sc.local_sc.add_codeline(main_line)
+            master_sdf_counter += 1
+
+            inst_transition_map = per_inst_motion_map[geometry_name]
+            global_sc = generate_transition_code(geometry_name, inst_transition_map, global_sc)
+
+    n_children = master_sdf_counter
+    output_type, output_name = last_output_type, last_output_name
+    children = [global_sc.local_sc.res_sdf_stack.pop() for _ in range(n_children)]
+    # reverse the children
+    children = children[::-1]
+    child_names = [child[1] for child in children]
+    child_types = [child[0] for child in children]
+
+    child_type = child_types[0]
+    res_sdf_name = f"sdf_{global_sc.local_sc.res_sdf_count}"
+    global_sc.local_sc.res_sdf_count += 1
+    res_sdf_names = ", ".join(child_names)
+    func_name = "Union"
+    code_line = f"{child_type} {res_sdf_name} = {func_name}({res_sdf_names});"
+    global_sc.local_sc.add_codeline(code_line)
+    input_format = (child_type, n_children)
+    global_sc.local_sc.add_dependency(func_name)
+    global_sc.add_shader_module(func_name, input_format=input_format)
+    global_sc.local_sc.res_sdf_stack.append((child_type, res_sdf_name))
     
-    def convert_uniforms(self):
-        uniform_lines = []
-        for key, value in self.uniforms.items():
-            uniform_line = f"uniform {value['type']} {key};"
-            uniform_lines.append(uniform_line)
-        return "\n".join(uniform_lines)
+
+    global_sc.resolve_codebook() # This will finins ahd add the function.
     
-    def add_bbox(self, bbox, geometry_name):
-        if len(bbox) == 2:
-            # it has scale and origin
-            bbox_scale = bbox[0]
-            bbox_origin = bbox[1]
-            bbox_scale = _inline_parse_param_from_expr(None, tuple([bbox_scale,]), self)
-            bbox_origin = _inline_parse_param_from_expr(None, tuple([bbox_origin,]), self)
-            code_lines = "\n".join(self.codebook)
-            bbox_func = string.Template(fw.BOUNDING_BOX_BETA_WRAPPER).substitute({
-                "geometry_name": geometry_name,
-                "bbox_scale": bbox_scale[0],
-                "bbox_origin": bbox_origin[0]
-            })
-            self.custom_functions.append(bbox_func)
-        else:
-            
-            bbox_param = _inline_parse_param_from_expr(None, tuple([bbox,]), self)
-            code_lines = "\n".join(self.codebook)
-            bbox_func = string.Template(fw.BOUNDING_BOX_WRAPPER).substitute({
-                "geometry_name": geometry_name,
-                "code_lines": code_lines,
-                "bbox_param": bbox_param[0]
-            })
-            self.custom_functions.append(bbox_func)
 
-    def refresh(self):
-        """
-        Update all expect Tracked Functions and custom functions
-        """
-        self.codebook = []
-        # self.tracked_functions = OSet(['iBox', "Box3D", "MinRes"])
-        # self.custom_functions = []
-        # self.tracked_variables = []
-        self.pos_stack = ["pos_0"]
-        self.sdf_stack = []
-        self.final_output = None
-        self.sdf_count = 0
-        self.pos_count = 0
-        # self.uniforms = {}
-
-    def convert_to_sdf_function(self, function_name):
-        code_list = self.codebook
-        code_lines = "\n".join(code_list)
-        sdf_func_code = string.Template(fw.SDF_FUNCTION_WRAPPER)
-        sdf_func_code = sdf_func_code.substitute({
-            'code_lines': code_lines,
-            'function_name': function_name
-        })
-        return sdf_func_code
-    def convert_to_transition_function(self, function_name):
-        code_list = self.codebook
-        code_lines = "\n".join(code_list)
-        sdf_func_code = string.Template(fw.TRANSITION_FUNCTION_WRAPPER)
-        sdf_func_code = sdf_func_code.substitute({
-            'code_lines': code_lines,
-            'function_name': function_name
-        })
-        return sdf_func_code
-
-    
-def generate_transition_code(geometry_name, inst_transition_map, shader_code_store : ShaderCodeStore = None, beta_mode=False):
-
-    if shader_code_store is None:
-        shader_code_store = ShaderCodeStore()
-    # Add the motion specific functions
-    
-    shader_code_store.tracked_functions.update(MOTION_FUNCTIONS)
-    # First convert each state expr to a shader function
-    state_cases = []
-    time_steps = []
-    for ind, (state_i, state_expr) in enumerate(inst_transition_map.items()):
-        shader_code_store = recursive_convert_transition(state_expr, shader_code_store=shader_code_store)
-        sdf_func_code = shader_code_store.convert_to_transition_function(f"{geometry_name}_state{ind}")
-        shader_code_store.custom_functions.append(sdf_func_code)
-        shader_code_store.refresh()
-        state_cases.append(f"case {ind}: return {geometry_name}_state{ind}();")
-        time_steps.append(state_i)
-
-    # Now the wrappers
-    # one for mapping the input to mat4s
-    if len(time_steps) == 1:
-        if beta_mode:
-            wrapper = fw.TRANSITION_STATE_BETA_WRAPPER_SINGLE
-        else:
-            wrapper = fw.TRANSITION_STATE_WRAPPER_SINGLE
-        transition_state_func = string.Template(wrapper).substitute({
-            "geometry_name": geometry_name,
-        })
+    min_global_step = min([v for v in state_map.keys()])
+    max_global_step = max([v for v in state_map.keys()])
+    global_sc.uniforms["globalStateStep"] = {
+        "type": "float",
+        "init_value": 0.0,
+        'min': [min_global_step,],
+        "max": [max_global_step,]
+    }
+    render_mode = settings.get("render_mode", "v1")
+    if render_mode in ["v1", "v2"]:
+        global_sc.add_shader_module(main_image_map[render_mode])
+    elif render_mode in ["v3", "v4"]:
+        global_sc.resolve_material_stack(version=render_mode)
+        global_sc.add_shader_module(main_image_map[render_mode])
     else:
-        if beta_mode:
-            wrapper = fw.TRANSITION_STATE_BETA_WRAPPER
-        else:
-            wrapper = fw.TRANSITION_STATE_WRAPPER
-        transition_state_func = string.Template(wrapper).substitute({
-            "geometry_name": geometry_name,
-            "state_cases": "\n\t\t".join(state_cases),
-            "N": len(time_steps),
-            "time_steps": ", ".join([str(float(x)) for x in time_steps])
-        })
-    shader_code_store.custom_functions.append(transition_state_func)
-    # second write the wrappers
-    return shader_code_store
+        raise ValueError(f"Invalid render mode: {render_mode}")
     
+    shader_code = global_sc.emit_shader_code(settings)
 
-def recursive_convert_transition(expression, shader_code_store=None):
+    with open("shader_code.glsl", "w") as f:
+        f.write(shader_code)
 
-    if shader_code_store is None:
-        shader_code_store = ShaderCodeStore()
-    
-    if isinstance(expression, MOD_TYPE):
-        sub_expr = expression.args[0]
-        params = expression.args[1:]
-        params = _inline_parse_param_from_expr(expression, params, shader_code_store)
-        # This is a hack unclear how to deal with other types)
-        if isinstance(expression, TRANSFORM_TYPE):
-            shader_code_store = TRANSITION_MAP[type(expression)](shader_code_store, *params)
-            return recursive_convert_transition(sub_expr, shader_code_store,)
-    elif isinstance(expression, ms.NamedGeometry):
-        # create sdf and return.
-
-        params = [expression.args[0].name,]
-        shader_code_store = TRANSITION_MAP[type(expression)](shader_code_store, *params)
-        return shader_code_store
+    uniforms = global_sc.get_uniforms()
+    textures = global_sc.get_textures()
+    if return_shader_context:
+        return shader_code, uniforms, textures, global_sc
     else:
-        raise NotImplementedError
-
-def recursive_convert_to_shader(
-    expression: GLFunction,
-    shader_code_store = None,
-
-):
-    """
-    Recursively evaluates a GeoLIPI expression to generate a signed distance field (SDF) or a color canvas.
-
-    This function can handles all GeoLIPI operations but is slower than the other evaluation methods.
-
-    Parameters:
-        expression (GLFunction): The GLFunction expression to evaluate.
-        sketcher (Sketcher): Primary sketcher object for SDF or color generation.
-        secondary_sketcher (Sketcher, optional): Secondary sketcher for higher-order primitives.
-        initialize (bool): Flag to initialize coordinates and scale if True. Used for the first call.
-        rectify_transform (bool): Flag to rectify transformations.
-        coords (th.Tensor, optional): Coordinates for evaluation. If None, generated from sketcher.
-        tracked_scale (th.Tensor, optional): Scale tracking tensor. If None, generated from sketcher.
-        relaxed_occupancy (bool): Flag to use relaxed occupancy for soft SDFs. Useful with Parameter Optimization of SVG expressions.
-        relax_temperature (float): Temperature parameter for relaxed occupancy. Defaults to 0.0.
-
-    Returns:
-        th.Tensor: The resulting SDF or color canvas from evaluating the expression.
-    """
-    if shader_code_store is None:
-        shader_code_store = ShaderCodeStore()
+        return shader_code, uniforms, textures
     
 
-    if isinstance(expression, MACRO_TYPE):
-        raise NotImplementedError
-    elif isinstance(expression, MOD_TYPE):
-        sub_expr = expression.args[0]
-        params = expression.args[1:]
-        params = _inline_parse_param_from_expr(expression, params, shader_code_store)
-        # This is a hack unclear how to deal with other types)
-        if isinstance(expression, TRANSFORM_TYPE):
-            shader_code_store = MODIFIER_MAP[type(expression)](shader_code_store, *params)
-            return recursive_convert_to_shader(
-                sub_expr,
-                shader_code_store=shader_code_store,
-            )
-        elif isinstance(expression, POSITIONALMOD_TYPE):
-            raise NotImplementedError
-        elif isinstance(expression, SDFMOD_TYPE):
-            sub_expr = expression.args[0]
-            params = expression.args[1:]
-            params = _inline_parse_param_from_expr(expression, params, shader_code_store)
-            # This is a hack unclear how to deal with other types)
-            shader_code_store = recursive_convert_to_shader(
-                sub_expr,
-                shader_code_store=shader_code_store,
-            )
-            shader_code_store = MODIFIER_MAP[type(expression)](shader_code_store, *params)
-            return shader_code_store
-    elif isinstance(expression, PRIM_TYPE):
-        # create sdf and return.
+@rec_shader_eval.register
+def eval_polyarc(expression: gls.PolyArc2D, global_sc:GlobalShaderContext=None):
+    params = expression.args
+    if isinstance(expression, gls.PolyArc2D):
+        params = (gls.VecList(params[0], len(params[0])),)
+    params = _inline_parse_param_from_expr(expression, params, global_sc)
+    func_name = expression.__class__.__name__
+    cur_pos = global_sc.local_sc.pos_stack.pop()
+    sdf_name = f"sdf_{global_sc.local_sc.res_sdf_count}"
+    global_sc.local_sc.res_sdf_count += 1
+    vec_list, num_points = params
 
-        params = expression.args
-        if isinstance(expression, gls.PolyArc2D):
-            params = (gls.VecList(params[0], len(params[0])),)
-        params = _inline_parse_param_from_expr(expression, params, shader_code_store)
+    custom_func_name = f"polyarc_custom_{global_sc.custom_func_count}"
+    global_sc.custom_func_count += 1
+    code_line = f"float {sdf_name} = {custom_func_name}({cur_pos},{vec_list});"
+    global_sc.local_sc.add_codeline(code_line)
+    global_sc.local_sc.add_dependency(func_name)
+    global_sc.local_sc.res_sdf_stack.append(("float", sdf_name))
 
-        shader_code_store = PRIMITIVE_MAP[type(expression)](shader_code_store, *params)
-        return shader_code_store
-    elif isinstance(expression, COMBINATOR_TYPE):
-        # what about parameterized combinators?
-        tree_branches, param_list = [], []
-        for arg in expression.args:
-            if arg in expression.lookup_table:
-                param_list.append(expression.lookup_table[arg])
-            else:
-                tree_branches.append(arg)
-        # the pos has to be copied
-        cur_pos = shader_code_store.pos_stack.pop()
-        
-        for child in tree_branches:
-            shader_code_store.pos_stack.append(cur_pos)
+    global_sc.add_shader_module(func_name, 
+        function_name=custom_func_name, 
+        num_points=num_points
+    )
+    return global_sc
 
-            shader_code_store = recursive_convert_to_shader(
-                child,
-                shader_code_store=shader_code_store,
-            )
+@rec_shader_eval.register
+def eval_linked_hf(expression: ms.LinkedHeightField3D, global_sc:GlobalShaderContext=None):
+    plane = expression.args[0]
+    apply_height_expr = expression.args[1]
+    inner_expr = apply_height_expr.args[0]
 
-        shader_code_store = COMBINATOR_MAP[type(expression)](shader_code_store, len(tree_branches), *param_list)
-        return shader_code_store
-    elif isinstance(expression, ms.LinkedHeightField3D):
-        plane = expression.args[0]
-        apply_height_expr = expression.args[1]
-        plane_args = _inline_parse_param_from_expr(plane, plane.args, shader_code_store)
+    plane_args = _inline_parse_param_from_expr(plane, plane.args, global_sc)
+    primitive_param = ",".join(plane_args)
+    func_name = "LocalHFCoord"
+    cur_pos = global_sc.local_sc.pos_stack.pop()
+    global_sc.local_sc.pos_count += 1
+    new_pos = f"pos_{global_sc.local_sc.pos_count}"
+    # GLSL code for sphere (sphere_param[0] is the vec4 sphere parameters)
+    code_line = f"vec3 {new_pos} = {func_name}({cur_pos}, {primitive_param});"
+    global_sc.local_sc.add_codeline(code_line)
+    global_sc.local_sc.pos_stack.append(new_pos)
+    code_line = f"vec2 {new_pos}_xy = {new_pos}.xy;"
+    global_sc.local_sc.add_codeline(code_line)
+    global_sc.local_sc.add_dependency(func_name)
+    global_sc.add_shader_module(func_name)
+    global_sc.local_sc.pos_stack.append(f"{new_pos}_xy")
 
-        shader_code_store = PRIMITIVE_MAP[type(expression)](shader_code_store, *plane_args)
-        # This now has the local coordinates. 
-        height = _inline_parse_param_from_expr(plane, apply_height_expr.args[1:], shader_code_store)[0]
+    # Eval of the inner expression
+    global_sc = rec_shader_eval(inner_expr, global_sc=global_sc)
 
-        inner_expr = apply_height_expr.args[0]
-
-        # Eval of the inner expression
-        shader_code_store = recursive_convert_to_shader(
-                inner_expr,
-                shader_code_store=shader_code_store,
-            )
-        shader_code_store = PRIMITIVE_MAP[type(apply_height_expr)](shader_code_store, height)
-        return shader_code_store
+    height = _inline_parse_param_from_expr(plane, apply_height_expr.args[1:], global_sc)[0]
+    pos3d = global_sc.local_sc.pos_stack.pop()
+    sdf2d = global_sc.local_sc.res_sdf_stack.pop()
     
-    elif isinstance(expression, ms.SetMaterial):
-
-        inner_expr = expression.args[0]
-        shader_code_store = recursive_convert_to_shader(
-                inner_expr,
-                shader_code_store=shader_code_store,
-            )
-        params = expression.args[1:]
-        params = _inline_parse_param_from_expr(expression, params, shader_code_store)
-        shader_code_store = PRIMITIVE_MAP[type(expression)](shader_code_store, *params)
-        return shader_code_store
-
-    elif isinstance(expression, gls.UniformFloat):
-
-        inner_expr = expression.args[0]
-        shader_code_store = recursive_convert_to_shader(
-                inner_expr,
-                shader_code_store=shader_code_store,
-            )
-        params = expression.args[1:]
-        params, shader_code_store = _inline_parse_param_from_expr(expression, params, shader_code_store)
-        shader_code_store = PRIMITIVE_MAP[type(expression)](shader_code_store, *params)
-        return shader_code_store
-    elif isinstance(expression, ms.MarkerNode):
-
-        sub_expr = expression.args[0]
-        shader_code_store = recursive_convert_to_shader(
-            sub_expr,
-            shader_code_store=shader_code_store,
-        )
-        return shader_code_store
-    else:
-        raise NotImplementedError
-
+    sdf2d_type, sdf2d_name = sdf2d
+    func_name = "ApplyHeight"
+    sdf_name = f"sdf_{global_sc.local_sc.res_sdf_count}"
+    global_sc.local_sc.res_sdf_count += 1
+    # GLSL code for sphere (sphere_param[0] is the vec4 sphere parameters)
     
-
-uniform_type_map = {
-    gls.UniformFloat: "float",
-    gls.UniformVec2: "vec2",
-    gls.UniformVec3: "vec3",
-    gls.UniformVec4: "vec4",
-}
-
-# A mapper from operation type to shader line template
-map_op_map = {
-    "ADD": "{expr1} + {expr2}",
-    "SUB": "{expr1} - {expr2}",
-    "MUL": "{expr1} * {expr2}",
-    "DIV": "{expr1} / {expr2}",
-    "POW": "pow({expr1}, {expr2})",
-    "NEG": "-{expr}",
-    "SIN": "sin({expr})",
-    "COS": "cos({expr})",
-    "TAN": "tan({expr})",
-    "ASIN": "asin({expr})",
-    "ACOS": "acos({expr})",
-    "ATAN": "atan({expr})",
-    "ATAN2": "atan({expr1}, {expr2})",
-    "LOG": "log({expr})",
-    "EXP": "exp({expr})",
-    "SQRT": "sqrt({expr})",
-    "ABS": "abs({expr})",
-    "MIN": "min({expr1}, {expr2})",
-    "MAX": "max({expr1}, {expr2})",
-    "FLOOR": "floor({expr})",
-    "CEIL": "ceil({expr})",
-    "ROUND": "round({expr})",
-    "FRAC": "fract({expr})",
-    "SIGN": "sign({expr})",
-    "STEP": "step({expr1}, {expr2})",
-    "MOD": "mod({expr1}, {expr2})",
-    "NORMALIZE": "normalize({expr})",
-    "NORM": "length({expr})",
-}
-
-def recursive_parse_param(expression, params, shader_code_store):
-    shader_params = []
-    for ind, param in enumerate(params):
-        if isinstance(param, (tuple, sp.Tuple)):
-            processed_param = param_primitive_process(param)
-            shader_params.append(processed_param)
-        elif isinstance(param, str):
-            # Are we sure?
-            shader_params.append(param)
-        elif isinstance(param, sp.Symbol):
-            if param in expression.lookup_table:
-                cur_param = expression.lookup_table[param]
-                processed_param = param_primitive_process(cur_param)
-                shader_params.append(processed_param)
-            else:
-                shader_params.append(param.name)
-        elif isinstance(param, (sp.Integer, sp.Float)):
-            if isinstance(param, sp.Integer):
-                param = float(param)
-            processed_param = f"{param}"
-            shader_params.append(processed_param)
-        elif isinstance(param, (gls.VecList)):
-            vector_list, n_vecs = param.args
-            under_params = vector_list
-            under_expression = param
-            cur_params, shader_code_store = recursive_parse_param(under_expression, under_params, shader_code_store)
-            varname = f"var_{len(shader_code_store.tracked_variables)}"
-            shader_code_store.tracked_variables.append(varname)
-            vec_type = f"vec{len(vector_list[0])}"
-            vec_line = f"const {vec_type}[] {varname} = {vec_type}[]({', '.join(cur_params)});"
-            shader_code_store.codebook.append(vec_line)
-            shader_params.append(varname)
-            shader_params.append(str(n_vecs))
-        elif isinstance(param, (gls.UniformFloat, gls.UniformVec2, gls.UniformVec3, gls.UniformVec4)):
-            min_val, default_val, max_val, uniform_name = param.args
-            uniform_name = uniform_name.name
-            arg_type = uniform_type_map[type(param)]
-            uniform_entry = {'type': arg_type, "init_value": [float(x) for x in default_val], 
-                                "min": [float(x) for x in min_val], "max": [float(x) for x in max_val]}
-            if isinstance(param, gls.UniformFloat):
-                uniform_entry["init_value"] = uniform_entry["init_value"][0]
-            shader_code_store.uniforms.update({uniform_name: uniform_entry})
-            shader_params.append(uniform_name)
-        elif isinstance(param, (gls.Float, gls.Vec2, gls.Vec3, gls.Vec4)):
-            # Now its input can be a math node, or a variable. 
-            under_expression = param
-            under_params = param.args
-            cur_params, shader_code_store = recursive_parse_param(under_expression, under_params, shader_code_store)
-            if isinstance(param, gls.Float):
-                shader_params.append(cur_params[0])
-            elif isinstance(param, gls.Vec2):
-                new_param = f"vec2({cur_params[0]}, {cur_params[1]})"
-                shader_params.append(new_param)
-            elif isinstance(param, gls.Vec3):
-                new_param = f"vec3({cur_params[0]}, {cur_params[1]}, {cur_params[2]})"
-                shader_params.append(new_param)
-            elif isinstance(param, gls.Vec4):
-                new_param = f"vec4({cur_params[0]}, {cur_params[1]}, {cur_params[2]}, {cur_params[3]})"
-                shader_params.append(new_param)
-            else:
-                raise NotImplementedError
-        elif isinstance(param, gls.VarSplitter):
-            under_expression = param
-            under_params = param.args
-            cur_params, shader_code_store = recursive_parse_param(under_expression, under_params, shader_code_store)
-            selected_ind = int(float(cur_params[1]))
-            new_param = cur_params[0]
-            if selected_ind == 0:
-                shader_params.append(f"{new_param}.x")
-            elif selected_ind == 1:
-                shader_params.append(f"{new_param}.y")
-            elif selected_ind == 2:
-                shader_params.append(f"{new_param}.z")
-            elif selected_ind == 3:
-                shader_params.append(f"{new_param}.w")
-            else:
-                raise NotImplementedError
-        elif isinstance(param, (gls.UnaryOperator, gls.VectorOperator)):
-            under_expression = param
-            under_params = param.args
-            cur_params, shader_code_store = recursive_parse_param(under_expression, under_params, shader_code_store)
-            new_param = cur_params[0]
-            op = cur_params[1]
-            op_template = map_op_map[op]
-            shader_line = op_template.format(expr=new_param)
-            shader_params.append(shader_line)
-        elif isinstance(param, gls.BinaryOperator):
-            under_expression = param
-            under_params = param.args
-            cur_params, shader_code_store = recursive_parse_param(under_expression, under_params, shader_code_store)
-            new_param1 = cur_params[0]
-            new_param2 = cur_params[1]
-            op = cur_params[2]
-            op_template = map_op_map[op]
-            shader_line = op_template.format(expr1=new_param1, expr2=new_param2)
-            shader_params.append(shader_line)
-        else:
-            print(f"DEBUG: recursive_parse_param: {param}")
-            raise NotImplementedError
-            
-    return shader_params, shader_code_store
+    code_line = f"{sdf2d_type} {sdf_name} = {func_name}({pos3d}, {sdf2d_name}, {height});"
+    global_sc.local_sc.add_codeline(code_line)
+    global_sc.local_sc.add_dependency(func_name)
+    global_sc.add_shader_module(func_name)
+    global_sc.local_sc.res_sdf_stack.append((sdf2d_type, sdf_name))
+    return global_sc
 
 
-def _inline_parse_param_from_expr(expression, params, shader_code_store=None):
-    shader_params, shader_code_store = recursive_parse_param(expression, params, shader_code_store)
-    return shader_params
+@rec_shader_eval.register
+def eval_mxg_function(expression: ms.MarkerNode, global_sc:GlobalShaderContext=None):
+    inner_expr = expression.args[0]
+    global_sc = rec_shader_eval(inner_expr, global_sc=global_sc)
+    return global_sc
 
-def param_primitive_process(param):
 
-    if isinstance(param, str):
-        shader_line = f"{param}"
-    else:
-        if len(param) == 0:
-            if isinstance(param, sp.Integer):
-                param = float(param)
-            shader_line = f"{param}"
-        if len(param) == 1:
-            if isinstance(param[0], sp.Integer):
-                param = [float(param[0])]
-            shader_line = f"{param[0]}"
-        elif len(param) == 2:
-            shader_line = f"vec2({param[0]}, {param[1]})"
-        elif len(param) == 3:
-            shader_line = f"vec3({param[0]}, {param[1]}, {param[2]})"
-        elif len(param) == 4:
-            shader_line = f"vec4({param[0]}, {param[1]}, {param[2]}, {param[3]})"
-        else:
-            print(f"DEBUG: param_primitive_process: {param}")
-            raise NotImplementedError
-    return shader_line

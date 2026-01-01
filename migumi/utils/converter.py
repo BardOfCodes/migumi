@@ -82,9 +82,9 @@ def fix_expression_v2(gls_expr, color, mode="v1"):
         material_id = gls_expr.args[1]
         inner_expr = fix_expression_v2(gls_expr.args[0], color, mode)
         if mode == "v1":
-            new_expression = sls.MatSolidV1(inner_expr, sls.SMPLMaterial(material_id))
+            new_expression = sls.MatSolidV1(inner_expr, sls.MaterialV1(material_id))
         elif mode == "v2":
-            new_expression = sls.MatSolidV2(inner_expr, sls.RGBMaterial(color))
+            new_expression = sls.MatSolidV2(inner_expr, sls.MaterialV2(color))
         elif mode == "v3":
             mat_expr = sls.NonEmissiveMaterialV3(color, (0.0,), (0.9,), (0.9,))
             new_expression = sls.MatSolidV3(inner_expr, mat_expr)

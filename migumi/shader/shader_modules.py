@@ -1,5 +1,5 @@
 from sysl.shader.shader_module import register_shader_module, SMMap
-from sysl.shader.shader_templates.functions.custom_functions import CustomFunctionShaderModule
+from sysl.shader.shader_mod_ext import CustomFunctionShaderModule
 from string import Template
 
 BaseHelpers = register_shader_module("""

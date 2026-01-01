@@ -2,7 +2,7 @@
 ## All the other code components
 ## Main Fragment
 import geolipi.symbolic as gls
-from sysl.shader.evaluate import rec_shader_eval
+from sysl.shader.evaluate_singlepass import rec_shader_eval
 from sysl.shader.param_evaluate import _inline_parse_param_from_expr
 from sysl.shader.global_shader_context import GlobalShaderContext
 import migumi.symbolic as ms
@@ -12,7 +12,7 @@ from .transition_evaluate import generate_transition_code
 from .state_based_converter import state_converter
 
 from sysl.shader.global_shader_context import GlobalShaderContext
-from sysl.shader.evaluate import rec_shader_eval, main_image_map, SCENE_EXPR_PROPS
+from sysl.shader.evaluate_singlepass import rec_shader_eval, main_image_map, SCENE_EXPR_PROPS
 
 
 

@@ -1,6 +1,6 @@
 from sysl.shader.evaluate_multipass import posttrace_map
 from sysl.shader.global_shader_context import GlobalShaderContext
-from sysl.shader.evaluate import rec_shader_eval, main_image_map, SCENE_EXPR_PROPS
+from sysl.shader.evaluate_singlepass import rec_shader_eval, main_image_map, SCENE_EXPR_PROPS
 from sysl.shader.evaluate_multipass import rec_sdf_shader_eval
 from .state_based_converter import state_converter
 from .transition_evaluate import generate_transition_code
@@ -181,10 +181,7 @@ def compile_set_multipass(expression_dict, state_map, settings=None,
     global_sc = compile_shader(expression_dict, state_map, global_sc=global_sc, mode="geom")
         
     global_sc.resolve_codebook()
-    if AA > 1:
-        global_sc.add_shader_module("main_sdf_trace_AA")
-    else:
-        global_sc.add_shader_module("main_sdf_trace")
+    global_sc.add_shader_module("main_sdf_trace", AA=AA)
     
     shader_code = global_sc.emit_shader_code(settings, version="sdf_trace")
 
@@ -222,16 +219,9 @@ def compile_set_multipass(expression_dict, state_map, settings=None,
     global_sc = compile_shader(expression_dict, state_map, global_sc=global_sc, mode="mat")
 
     global_sc.resolve_codebook() 
-    if render_mode in ["v1", "v2"]:
-        global_sc.add_shader_module(posttrace_map[render_mode])
-    elif render_mode in ["v3", "v4"]:
+    if render_mode in ["v3"]:
         global_sc.resolve_material_stack(version=render_mode)
-        if AA > 1:
-            global_sc.add_shader_module(posttrace_map[render_mode + "_AA"])
-        else:
-            global_sc.add_shader_module(posttrace_map[render_mode])
-    else:
-        raise ValueError(f"Invalid render mode: {render_mode}")
+    global_sc.add_shader_module(posttrace_map[render_mode], AA=AA)
     
     shader_code = global_sc.emit_shader_code(settings, version="post_sdf_trace")
     uniforms = global_sc.get_uniforms()
@@ -257,7 +247,7 @@ def compile_set_multipass(expression_dict, state_map, settings=None,
         settings, width_2, height_2, output_name,
         post_process_shader=post_process_shader, AA=AA
     )
-    all_shader_bundles.append(third_bundle)
+    all_shader_bundles.extend(third_bundle)
 
     # ================ FOURTH PASS (AA) ================
     aa_bundle = create_aa_pass_shader_bundle(width_2, height_2, AA, output_name)

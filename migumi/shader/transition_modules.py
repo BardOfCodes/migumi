@@ -1,6 +1,6 @@
 from sysl.shader.shader_module import register_shader_module, SMMap
 from string import Template
-from sysl.shader.shader_templates.functions.custom_functions import CustomFunctionShaderModule
+from sysl.shader.shader_mod_ext import CustomFunctionShaderModule
 
 Slerp = register_shader_module("""
 @name slerp
@@ -380,7 +380,7 @@ class TransitionWrapperSingle(CustomFunctionShaderModule):
         code_parts = []
         for function_name in self.function_names:
             ind = self.func_names.index(function_name)
-            code = self.template.substitute(func_name=function_name,
+            code = self.template.substitute(function_name=function_name,
             geometry_name=self.geometry_names[ind],
             out_type=self.out_types[ind],
             )

@@ -141,6 +141,17 @@ If you use MiGumi in your research, please cite:
     articleno={193},
 }
 ```
+## Acknowledgement:
+
+The shader for PolyArc2D is based on:
+
+1. https://www.shadertoy.com/view/3t33WH 
+
+2. https://www.shadertoy.com/view/wl23RK
+
+3. https://www.shadertoy.com/view/wdBXRW
+
+4. Bulge parameterization from: https://github.com/jbuckmccready/cavalier_contours 
 
 ## License
 

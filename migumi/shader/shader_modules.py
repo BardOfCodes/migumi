@@ -184,6 +184,11 @@ vec2 sdBulgeArc(in vec2 p, in vec2 a, in vec2 b, in float bulge)
 
 
 PolyArc2DInner = Template("""
+// Based on:
+// 1. https://www.shadertoy.com/view/3t33WH 
+// 2. https://www.shadertoy.com/view/wl23RK
+// 3. https://www.shadertoy.com/view/wdBXRW
+// 4. Bulge parameterization from: https://github.com/jbuckmccready/cavalier_contours 
 float ${function_name}( in vec2 p, in vec3[${n_points}] v )
 {
     // do this only if the bbox is entered. 
